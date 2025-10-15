@@ -1,4 +1,4 @@
-#include "funciones.h"
+#include "funciones_encriptar_desencriptar.h"
 #include <fstream>
 #include <bitset>
 
@@ -7,8 +7,8 @@ string leer_archivo_binario(string nombreArchivo){
 
     ifstream archivo(nombreArchivo, ios::binary);
     //if (!archivo.is_open()) {
-        //cout << "Error: no se pudo abrir el archivo." << endl;
-        //;
+    //cout << "Error: no se pudo abrir el archivo." << endl;
+    //;
     //}
 
     unsigned char byte;
@@ -21,6 +21,30 @@ string leer_archivo_binario(string nombreArchivo){
     archivo.close();
 
     return binarioCompleto;
+}
+string unir_bloques(string* bloques, int cantidadBloques) {
+    string resultado;
+    for (int i = 0; i < cantidadBloques; i++)
+        resultado += bloques[i];
+    return resultado;
+}
+void escribir_binario(string bits, string nombreArchivo) {
+    ofstream archivo(nombreArchivo, ios::binary);
+    unsigned char byte = 0;
+    for (size_t i = 0; i < bits.size(); ++i) {
+        byte = (byte << 1) | (bits[i] == '1');
+        if ((i + 1) % 8 == 0) {
+            archivo.write(reinterpret_cast<char*>(&byte), 1);
+            byte = 0;
+        }
+    }
+    // último byte si no es múltiplo de 8
+    size_t resto = bits.size() % 8;
+    if (resto != 0) {
+        byte <<= (8 - resto);
+        archivo.write(reinterpret_cast<char*>(&byte), 1);
+    }
+    archivo.close();
 }
 
 //funcion para partir en bloques el string en un arreglo de string segun la semilla n
@@ -62,21 +86,18 @@ void contarBits(string bloque, int &unos, int &ceros) {
         else ceros++;
     }
 }
-//invertir cada k bits para el metodo 1
+// Invertir las posiciones múltiplos de k (1,2,3... ⇒ 1-based)
 string invertirCadaKBits(string bloque, int k) {
-    string resultado = bloque;
-    bool invertir = true; // alternamos entre invertir y dejar igual
-
-    for (int i = 0; i < bloque.size(); i += k) {
-        if (invertir) {
-            for (int j = i; j < i + k && j < bloque.size(); j++) {
-                resultado[j] = (bloque[j] == '0') ? '1' : '0';
-            }
+    string res = bloque;
+    for (int i = 0; i < (int)bloque.size(); ++i) {
+        int pos1 = i + 1;                 // posición 1-basada
+        if (pos1 % k == 0) {
+            res[i] = (bloque[i] == '0') ? '1' : '0';
         }
-        invertir = !invertir;
     }
-    return resultado;
+    return res;
 }
+
 //codificar por el metodo 1
 string* codificarMetodo1(string *bloques, int cantidadBloques) {
     string *codificados = new string[cantidadBloques];
@@ -122,4 +143,49 @@ string* codificarMetodo2(string *bloques, int cantidadBloques) {
     }
 
     return codificados;
+}
+
+string* decodificarMetodo1(string* codificados, int cantidadBloques) {
+    string* decodificados = new string[cantidadBloques];
+    if (cantidadBloques == 0) return decodificados;
+
+    // Primer bloque: invertir todo
+    decodificados[0] = invertirBits(codificados[0]);
+
+    // Siguientes bloques
+    for (int i = 1; i < cantidadBloques; i++) {
+        int unos, ceros;
+        contarBits(decodificados[i - 1], unos, ceros);
+
+        if (unos == ceros) {
+            decodificados[i] = invertirBits(codificados[i]);
+        } else if (ceros > unos) {
+            decodificados[i] = invertirCadaKBits(codificados[i], 2);
+        } else {
+            decodificados[i] = invertirCadaKBits(codificados[i], 3);
+        }
+    }
+    return decodificados;
+}
+
+string decodificarBloqueMetodo2(string bloque) {
+    int n = bloque.size();
+    string resultado(n, '0');
+
+    for (int i = 0; i < n - 1; i++) {
+        resultado[i] = bloque[i + 1];
+    }
+    resultado[n - 1] = bloque[0];  // el primero pasa al final
+
+    return resultado;
+}
+
+string* decodificarMetodo2(string* codificados, int cantidadBloques) {
+    string* decodificados = new string[cantidadBloques];
+
+    for (int i = 0; i < cantidadBloques; i++) {
+        decodificados[i] = decodificarBloqueMetodo2(codificados[i]);
+    }
+
+    return decodificados;
 }
