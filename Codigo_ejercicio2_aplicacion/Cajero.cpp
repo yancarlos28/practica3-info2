@@ -41,11 +41,11 @@ void Cajero::cargarUsuarios() {
 
         usuarios[numUsuarios++] = Usuario(doc, clave, sal);
     }
-
+/*
     cout << "Usuarios cargados:\n";
     for (int i = 0; i < numUsuarios; ++i) {
         cout << usuarios[i].getDoc() << " - " << usuarios[i].getClave() << " - " << usuarios[i].getSaldo() << "\n";
-    }
+    }*/
 }
 
 void Cajero::guardarUsuarios() {

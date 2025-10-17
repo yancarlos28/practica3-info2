@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 string invertirBits(string bloque) {
-    for (int i = 0; i < bloque.size(); i++) {
+    for (size_t i = 0; i < bloque.size(); i++) {
         bloque[i]=(bloque[i]=='1')?'0':'1';
     }
     return bloque;
@@ -17,29 +17,40 @@ void contarBits(const string &bloque, int &cantidad1, int &cantidad0){
     }
 }
 
+
 string codificar(string binario) {
+    int n=7;
     string codificado = "";
-    int i = 0;
+    size_t i = 0;
+    string bloqueAnterior = "";
+
     while (i < binario.size()) {
-        string bloque = binario.substr(i, 7);
+        string bloque = binario.substr(i, n);
+
         if (i == 0) {
+            // Primer bloque: se invierten todos los bits
             bloque = invertirBits(bloque);
         } else {
+            // Contamos bits del bloque anterior (NO del actual)
             int cantidad1, cantidad0;
-            contarBits(bloque, cantidad1, cantidad0);
+            contarBits(bloqueAnterior, cantidad1, cantidad0);
 
-            if (cantidad1 == cantidad0){
+            if (cantidad1 == cantidad0) {
+                // Igual cantidad → invertir todos los bits
                 bloque = invertirBits(bloque);
-            } else if (cantidad0 > cantidad1) {
-                for (int j = 0; j < bloque.size();j+=2){
-                    bloque[j] = (bloque[j] == '1')?'0':'1';
-                    if(j + 1<bloque.size()){
+            }
+            else if (cantidad0 > cantidad1) {
+                // Más ceros → invertir cada 2 bits
+                for (size_t j = 0; j < bloque.size(); j += 2) {
+                    bloque[j] = (bloque[j] == '1') ? '0' : '1';
+                    if (j + 1 < bloque.size()) {
                         bloque[j + 1] = (bloque[j + 1] == '1') ? '0' : '1';
                     }
                 }
-            } else {
-                // Si hay más 1s, invertimos cada 3 bits
-                for (int j = 0; j < bloque.size(); j += 3) {
+            }
+            else {
+                // Más unos → invertir cada 3 bits
+                for (size_t j = 0; j < bloque.size(); j += 3) {
                     bloque[j] = (bloque[j] == '1') ? '0' : '1';
                     if (j + 1 < bloque.size()) {
                         bloque[j + 1] = (bloque[j + 1] == '1') ? '0' : '1';
@@ -52,10 +63,13 @@ string codificar(string binario) {
         }
 
         codificado += bloque;
-        i += 4;  // Avanzamos al siguiente bloque
+        bloqueAnterior = bloque;  // Guardamos este bloque para la próxima iteración
+        i += n;                   // Avanzamos al siguiente bloque
     }
+
     return codificado;
 }
+
 
 string decodificar(const string &codificado) {
     string original;

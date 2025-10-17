@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Usuario.h"
 using namespace std;
+
 Usuario::Usuario() : saldo(0) {}
 Usuario::Usuario(const string &doc, const string &cont, unsigned int sal): documento(doc), clave(cont), saldo(sal) {}
 
